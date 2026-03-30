@@ -19,7 +19,8 @@ ESP_ERROR_CHECK(esp_vfs_spiffs_register(&conf));
 }
 
 void app_main() {
-FILE *file = fopen("/roofvogel.wav", "rb");
+spiffs_init();
+FILE *file = fopen("/spiffs/roofvogel.wav", "rb");
 if (!file) {
 ESP_LOGE(TAG, "Kan bestand niet openen: %s",
 "/spiffs/roofvogel.wav");
