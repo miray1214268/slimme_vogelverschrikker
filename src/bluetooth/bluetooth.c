@@ -44,6 +44,28 @@ static esp_ble_mesh_comp_t composition = {
     .elements = elements,
 };
 
+static void prov_cb(esp_ble_mesh_prov_cb_event_t event,
+                    esp_ble_mesh_prov_cb_param_t *param)
+{
+    switch (event) {
+    case ESP_BLE_MESH_NODE_PROV_ENABLE_COMP_EVT:
+        ESP_LOGI(TAG_Mesh, "Provisioning enabled");
+        break;
+
+    case ESP_BLE_MESH_NODE_PROV_LINK_OPEN_EVT:
+        ESP_LOGI(TAG_Mesh, "Provisioning link opened");
+        break;
+
+    case ESP_BLE_MESH_NODE_PROV_COMPLETE_EVT:
+        ESP_LOGI(TAG_Mesh, "Provisioning complete");
+        break;
+
+    default:
+        break;
+    }
+}
+
+
 static void mesh_server_cb(
     esp_ble_mesh_generic_server_cb_event_t event,
     esp_ble_mesh_generic_server_cb_param_t *param)
@@ -57,9 +79,9 @@ static void mesh_server_cb(
 
             uint8_t onoff = param->value.state_change.onoff_set.onoff;
 
-            ESP_LOGI("MESH", "Received ON/OFF: %d", onoff);
+            ESP_LOGI(TAG_Mesh, "Received ON/OFF: %d", onoff);
 
-            // hierzo hardware aan/uitzetten
+            // hierzo functie voor hardware aan/uitzetten
         }
         break;
 
@@ -84,14 +106,58 @@ void ble_mesh_init(void)
     // initialiseer BLE Mesh
     err = esp_ble_mesh_init(&provision, &composition);
     if (err) {
-        ESP_LOGE("MESH", "Mesh init failed");
+        ESP_LOGE(TAG_Mesh, "Mesh init failed");
         return;
     }
 
     esp_ble_mesh_node_prov_enable(
         ESP_BLE_MESH_PROV_ADV | ESP_BLE_MESH_PROV_GATT
     );
-    ESP_LOGI("MESH", "Provisioning enabled");
+    ESP_LOGI(TAG_Mesh, "Provisioning enabled");
+
+    esp_ble_mesh_register_prov_callback(prov_cb);
+}
+
+void bluetooth_init(void)
+{
+    esp_err_t err;
+
+    // Release classic BT memory (we only use BLE)
+    err = esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "mem_release failed: %s", esp_err_to_name(err));
+        return;
+    }
+
+    // Init controller
+    esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+    err = esp_bt_controller_init(&bt_cfg);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "controller init failed: %s", esp_err_to_name(err));
+        return;
+    }
+
+    // Enable BLE
+    err = esp_bt_controller_enable(ESP_BT_MODE_BLE);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "controller enable failed: %s", esp_err_to_name(err));
+        return;
+    }
+
+    // Init Bluedroid stack
+    err = esp_bluedroid_init();
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "bluedroid init failed: %s", esp_err_to_name(err));
+        return;
+    }
+
+    err = esp_bluedroid_enable();
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "bluedroid enable failed: %s", esp_err_to_name(err));
+        return;
+    }
+
+    ESP_LOGI(TAG, "Bluetooth initialized successfully");
 }
 
 
