@@ -6,5 +6,6 @@
 
 void bluetooth_init(void);
 void ble_mesh_init(void);
+void ble_mesh_init_dev_uuid(void);
 
 #endif

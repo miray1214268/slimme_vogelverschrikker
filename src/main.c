@@ -16,6 +16,7 @@ void app_main(void)
     }
 
     // Start het mesh
+    ble_mesh_init_dev_uuid();
     bluetooth_init();
     ble_mesh_init();
 }

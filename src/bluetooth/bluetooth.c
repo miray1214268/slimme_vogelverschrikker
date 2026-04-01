@@ -14,6 +14,8 @@
 #include "esp_ble_mesh_generic_model_api.h"
 #include "esp_ble_mesh_local_data_operation_api.h"
 
+#include "esp_mac.h"
+
 #include "driver/gpio.h"
 
 #include "freertos/FreeRTOS.h"
@@ -31,7 +33,7 @@ static esp_ble_mesh_model_pub_t onoff_pub = {
 };
 
 static esp_ble_mesh_model_t root_models[] = {
-    ESP_BLE_MESH_MODEL_GEN_ONOFF_SRV(&onoff_pub, &onoff_server)
+    ESP_BLE_MESH_MODEL_GEN_ONOFF_SRV(&onoff_pub, &onoff_server),
 };
 
 static esp_ble_mesh_elem_t elements[] = {
@@ -90,7 +92,20 @@ static void mesh_server_cb(
     }
 }
 
-static uint8_t dev_uuid[16] = { 0xdd, 0xdd };
+static uint8_t dev_uuid[16];
+
+void ble_mesh_init_dev_uuid(void)
+{
+    memset(dev_uuid, 0, 16);
+
+    uint8_t mac[6];
+    esp_read_mac(mac, ESP_MAC_BT);
+
+    dev_uuid[0] = 0x01; // node type
+    memcpy(dev_uuid + 2, mac, 6);
+
+    ESP_LOG_BUFFER_HEX("UUID", dev_uuid, 16);
+}
 
 static esp_ble_mesh_prov_t provision = {
     .uuid = dev_uuid,
