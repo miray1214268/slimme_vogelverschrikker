@@ -23,6 +23,7 @@
 #include "freertos/semphr.h"
 
 #include "bluetooth.h"
+#include <LED/LED.h>
 
 static esp_ble_mesh_gen_onoff_srv_t onoff_server = {
     .state.onoff = 0,
@@ -84,6 +85,7 @@ static void mesh_server_cb(
             ESP_LOGI(TAG_Mesh, "Received ON/OFF: %d", onoff);
 
             // hierzo functie voor hardware aan/uitzetten
+            led();
         }
         break;
 
