@@ -23,6 +23,7 @@
 #include "freertos/semphr.h"
 
 #include "bluetooth.h"
+#include <LED/LED.h>
 
 static esp_ble_mesh_gen_onoff_srv_t onoff_server = {
     .state.onoff = 0,
