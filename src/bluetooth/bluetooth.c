@@ -84,6 +84,7 @@ static void mesh_server_cb(
             ESP_LOGI(TAG_Mesh, "Received ON/OFF: %d", onoff);
 
             // hierzo functie voor hardware aan/uitzetten
+            led();
         }
         break;
 
