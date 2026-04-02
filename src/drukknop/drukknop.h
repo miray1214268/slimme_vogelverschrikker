@@ -3,7 +3,7 @@
 
 #include "driver/gpio.h"
 
-#define KNOP_PIN 2
+#define KNOP_PIN 13
 
 extern gpio_config_t knop_conf;
 
