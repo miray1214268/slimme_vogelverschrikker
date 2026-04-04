@@ -15,6 +15,7 @@
 #define I2C_MASTER_NUM I2C_NUM_0
 #define MCP4725_ADDR 0x60
 #define WAV_HEADER 44
+#define US_DELAY 250
 
 static const char *TAG = "audio";
 
@@ -70,5 +71,27 @@ void app_main() {
     } else {
     ESP_LOGI(TAG, "bestand geopend: %s",
     "/spiffs/roofvogel.wav");
+    }
+
+    fseek(file, WAV_HEADER, SEEK_SET); // WAV header overslaan
+    uint8_t buffer[1024];
+
+    while (1)
+    {
+        int read = fread(buffer, 1, sizeof(buffer), file);
+
+        if (read <= 0) {
+            fseek(file, WAV_HEADER, SEEK_SET);
+            continue;
+        }
+
+        for (int i = 0; i < read; i++) {
+            uint8_t sample = buffer[i];      // 8-bit sample
+            uint16_t dac_value = ((int)sample - 128) * 16 + 2048; // 8 bit naar 12 bit
+
+            mcp4725_write(dac_value);
+
+            esp_rom_delay_us(US_DELAY);
+        }
     }
 }
