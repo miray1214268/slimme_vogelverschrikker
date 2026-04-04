@@ -1,0 +1,3 @@
+[submodule "components/mcp4725"]
+	path = components/mcp4725
+	url = https://github.com/Molorius/esp32-mcp4725.git
