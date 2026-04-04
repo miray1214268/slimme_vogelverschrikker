@@ -1,8 +1,6 @@
+#include "speaker.h"
 #include <stdio.h>
 #include <string.h>
-#include <sys/unistd.h>
-#include <sys/stat.h>
-#include "esp_err.h"
 #include "esp_log.h"
 #include "esp_spiffs.h"
 #include "driver/i2c.h"
@@ -10,17 +8,10 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define I2C_MASTER_SDA_IO 8
-#define I2C_MASTER_SCL_IO 9
-#define I2C_MASTER_NUM I2C_NUM_0
-#define MCP4725_ADDR 0x60
-#define WAV_HEADER 44
-#define US_DELAY 250
-
 static const char *TAG = "audio";
 
 // DAC write
-static esp_err_t mcp4725_write(uint16_t value)
+esp_err_t mcp4725_write(uint16_t value)
 {
     uint8_t data[2] = {
         value >> 4,
@@ -33,44 +24,40 @@ static esp_err_t mcp4725_write(uint16_t value)
         data,
         2,
         pdMS_TO_TICKS(20)
-);
+    );
 }
 
-void spiffs_init() {
+void spiffs_init(void) {
     esp_vfs_spiffs_conf_t conf = {
-    .base_path = "/spiffs",
-    .partition_label = NULL,
-    .max_files = 2,
-    .format_if_mount_failed = true
+        .base_path = "/spiffs",
+        .partition_label = NULL,
+        .max_files = 2,
+        .format_if_mount_failed = true
     };
     ESP_ERROR_CHECK(esp_vfs_spiffs_register(&conf));
 }
 
-void I2C_init() {
+void I2C_init(void) {
     i2c_config_t conf = {
         .mode = I2C_MODE_MASTER,
         .sda_io_num = I2C_MASTER_SDA_IO,
         .scl_io_num = I2C_MASTER_SCL_IO,
         .sda_pullup_en = GPIO_PULLUP_ENABLE,
         .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = 400000, // zoals jouw werkende versie
+        .master.clk_speed = 400000,
     };
 
     i2c_param_config(I2C_MASTER_NUM, &conf);
     i2c_driver_install(I2C_MASTER_NUM, conf.mode, 0, 0, 0);
 }
 
-void app_main() {
-    spiffs_init();
-    I2C_init();
-    FILE *file = fopen("/spiffs/roofvogel.wav", "rb");
+void speel_wav_file(const char *path) {
+    FILE *file = fopen(path, "rb");
     if (!file) {
-    ESP_LOGE(TAG, "Kan bestand niet openen: %s",
-    "/spiffs/roofvogel.wav");
-    return;
+        ESP_LOGE(TAG, "Kan bestand niet openen: %s", path);
+        return;
     } else {
-    ESP_LOGI(TAG, "bestand geopend: %s",
-    "/spiffs/roofvogel.wav");
+        ESP_LOGI(TAG, "Bestand geopend: %s", path);
     }
 
     fseek(file, WAV_HEADER, SEEK_SET); // WAV header overslaan
@@ -90,7 +77,6 @@ void app_main() {
             uint16_t dac_value = ((int)sample - 128) * 16 + 2048; // 8 bit naar 12 bit
 
             mcp4725_write(dac_value);
-
             esp_rom_delay_us(US_DELAY);
         }
     }
