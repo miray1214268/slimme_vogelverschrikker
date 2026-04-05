@@ -6,7 +6,8 @@
 #include <bluetooth/bluetooth.h>
 #include <drukknop/drukknop.h>
 #include <LED/LED.h>
-
+#include "speaker/speaker.h"
+  
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -29,6 +30,11 @@ void app_main(void)
     ble_mesh_init_dev_uuid();
     bluetooth_init();
     ble_mesh_init();
-
+    
+    spiffs_init();
+    I2C_init();
+  
     xTaskCreate(button_task, "button_task", 2048, NULL, 5, NULL);
+    
+    play_wav_file("/spiffs/roofvogel.wav");
 }
